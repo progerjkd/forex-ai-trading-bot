@@ -19,6 +19,10 @@ An intelligent FOREX trading bot powered by machine learning and ChatGPT strateg
 2. **ChatGPT (Smart Layer)**: Strategic analysis 1-3x per day
 3. **Human Oversight (Safety Layer)**: Manual approval via Telegram
 
+For detailed system architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+For architectural decisions and rationale, see [docs/DECISIONS.md](docs/DECISIONS.md).
+
 ## Tech Stack
 
 - **Backend**: Python 3.11+, FastAPI, Celery, SQLAlchemy
@@ -106,6 +110,10 @@ forex-ai-trading-bot/
 │   └── backtesting/         # Backtesting engine
 ├── frontend/                # React dashboard
 ├── infrastructure/          # Docker, Terraform
+├── docs/                    # Documentation
+│   ├── ARCHITECTURE.md      # System design and component details
+│   ├── DECISIONS.md         # Architecture Decision Records (ADRs)
+│   └── (future) SPEC.md     # Technical specifications
 ├── scripts/                 # Utility scripts
 └── notebooks/               # Jupyter notebooks for analysis
 ```
@@ -196,6 +204,12 @@ MIT License - See [LICENSE](LICENSE) file
 
 ⚠️ **This is for educational and paper trading purposes only.** Trading financial instruments carries significant risk. Never trade with money you cannot afford to lose. Past performance does not guarantee future results.
 
+## Documentation
+
+- **[PLAN.md](PLAN.md)**: 15-week implementation roadmap
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Detailed system architecture and component design
+- **[docs/DECISIONS.md](docs/DECISIONS.md)**: Architecture Decision Records (ADRs) explaining key technical choices
+
 ## Support
 
-For questions or issues, please open a GitHub issue or refer to [PLAN.md](PLAN.md) for detailed documentation.
+For questions or issues, please open a GitHub issue or refer to the documentation above.
