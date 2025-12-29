@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "forex-ai-trading-bot"
+version = "0.1.0"
+description = "AI-powered FOREX trading bot with ML signals and ChatGPT strategic analysis"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Web Framework
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+python-socketio = "^5.11.0"  # WebSocket support
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+
+# Database
+sqlalchemy = "^2.0.25"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.13.1"
+
+# Task Queue
+celery = "^5.3.6"
+redis = "^5.0.1"
+
+# Data Processing & ML
+pandas = "^2.1.4"
+numpy = "^1.26.3"
+scikit-learn = "^1.4.0"
+ta-lib = "^0.4.28"  # Technical indicators
+xgboost = "^2.0.3"
+
+# Trading APIs
+oandapyV20 = "^0.7.2"
+
+# LLM Integration
+openai = "^1.10.0"
+
+# Telegram Bot
+python-telegram-bot = "^20.8"
+
+# AWS SDK
+boto3 = "^1.34.34"
+
+# Backtesting
+vectorbt = "^0.26.0"
+
+# Utilities
+python-dotenv = "^1.0.0"
+pytz = "^2024.1"
+requests = "^2.31.0"
+aiohttp = "^3.9.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.3"
+pytest-cov = "^4.1.0"
+black = "^24.1.1"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+ipython = "^8.20.0"
+jupyter = "^1.0.0"
+notebook = "^7.0.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "auto"
