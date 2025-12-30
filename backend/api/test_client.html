@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOREX Trading Bot - WebSocket Test Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        input, select, button {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        #messages {
+            height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .message.tick {
+            border-left-color: #10b981;
+        }
+
+        .message.candle {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .message.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .candle-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .candle-table th {
+            background: #667eea;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        .candle-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .candle-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .candle-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .panels {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                FOREX Trading Bot - WebSocket Test Client
+                <span id="status" class="status disconnected">Disconnected</span>
+            </h1>
+            <p>Real-time market data streaming via WebSocket</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <input type="text" id="wsUrl" value="ws://localhost:8000/ws/test-client" placeholder="WebSocket URL" style="flex: 1;">
+                <button id="connectBtn" onclick="connect()">Connect</button>
+                <button id="disconnectBtn" onclick="disconnect()" disabled class="danger">Disconnect</button>
+            </div>
+            <div class="control-row">
+                <select id="instrument">
+                    <option value="EUR_USD">EUR/USD</option>
+                    <option value="GBP_USD">GBP/USD</option>
+                    <option value="USD_JPY">USD/JPY</option>
+                </select>
+                <button onclick="subscribe()" id="subscribeBtn" disabled>Subscribe</button>
+                <button onclick="unsubscribe()" id="unsubscribeBtn" disabled>Unsubscribe</button>
+                <button onclick="ping()" id="pingBtn" disabled>Ping</button>
+                <button onclick="clearMessages()">Clear Messages</button>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>Messages</h2>
+                <div id="messages"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Live Candles</h2>
+                <div class="candle-container">
+                    <table class="candle-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Instrument</th>
+                                <th>TF</th>
+                                <th>Open</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Close</th>
+                                <th>Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candleTable">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #9ca3af;">
+                                    No candles received yet. Subscribe to an instrument to see live data.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalMessages">0</div>
+                        <div class="stat-label">Total Messages</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="totalCandles">0</div>
+                        <div class="stat-label">Candles Received</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="totalTicks">0</div>
+                        <div class="stat-label">Ticks Received</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageCount = 0;
+        let candleCount = 0;
+        let tickCount = 0;
+        let candles = [];
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+
+            try {
+                ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    updateStatus(true);
+                    addMessage('System', 'Connected to WebSocket server', 'connection');
+                    enableButtons(true);
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                };
+
+                ws.onerror = (error) => {
+                    addMessage('Error', 'WebSocket error occurred', 'error');
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = () => {
+                    updateStatus(false);
+                    addMessage('System', 'Disconnected from WebSocket server', 'connection');
+                    enableButtons(false);
+                    ws = null;
+                };
+            } catch (error) {
+                addMessage('Error', `Failed to connect: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        function subscribe() {
+            const instrument = document.getElementById('instrument').value;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'subscribe',
+                    instrument: instrument
+                }));
+                addMessage('Client', `Subscribing to ${instrument}`, 'subscribe');
+            }
+        }
+
+        function unsubscribe() {
+            const instrument = document.getElementById('instrument').value;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'unsubscribe',
+                    instrument: instrument
+                }));
+                addMessage('Client', `Unsubscribing from ${instrument}`, 'unsubscribe');
+            }
+        }
+
+        function ping() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: new Date().toISOString()
+                }));
+                addMessage('Client', 'Ping sent', 'ping');
+            }
+        }
+
+        function handleMessage(data) {
+            messageCount++;
+            document.getElementById('totalMessages').textContent = messageCount;
+
+            const type = data.type;
+
+            if (type === 'candle') {
+                candleCount++;
+                document.getElementById('totalCandles').textContent = candleCount;
+                addCandle(data);
+                addMessage('Server', `Candle: ${data.instrument} ${data.timeframe} O:${data.open} H:${data.high} L:${data.low} C:${data.close}`, 'candle');
+            } else if (type === 'tick') {
+                tickCount++;
+                document.getElementById('totalTicks').textContent = tickCount;
+                addMessage('Server', `Tick: ${data.instrument} Bid:${data.bid} Ask:${data.ask} Mid:${data.mid}`, 'tick');
+            } else if (type === 'pong') {
+                addMessage('Server', 'Pong received', 'pong');
+            } else if (type === 'connection') {
+                addMessage('Server', data.message, 'connection');
+            } else if (type === 'subscribed') {
+                addMessage('Server', data.message, 'subscribe');
+            } else if (type === 'unsubscribed') {
+                addMessage('Server', data.message, 'unsubscribe');
+            } else if (type === 'error') {
+                addMessage('Server', `Error: ${data.message}`, 'error');
+            } else {
+                addMessage('Server', JSON.stringify(data), 'other');
+            }
+        }
+
+        function addMessage(source, message, type) {
+            const messagesDiv = document.getElementById('messages');
+            const time = new Date().toLocaleTimeString();
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.innerHTML = `<strong>[${time}] ${source}:</strong> ${message}`;
+            messagesDiv.appendChild(messageEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addCandle(candle) {
+            // Add to array (keep last 50)
+            candles.unshift(candle);
+            if (candles.length > 50) {
+                candles.pop();
+            }
+
+            // Update table
+            const table = document.getElementById('candleTable');
+            table.innerHTML = candles.map(c => `
+                <tr>
+                    <td>${new Date(c.timestamp).toLocaleTimeString()}</td>
+                    <td>${c.instrument}</td>
+                    <td>${c.timeframe}</td>
+                    <td>${c.open.toFixed(5)}</td>
+                    <td style="color: #10b981;">${c.high.toFixed(5)}</td>
+                    <td style="color: #ef4444;">${c.low.toFixed(5)}</td>
+                    <td><strong>${c.close.toFixed(5)}</strong></td>
+                    <td>${c.volume}</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+            messageCount = 0;
+            document.getElementById('totalMessages').textContent = '0';
+        }
+
+        function updateStatus(connected) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = connected ? 'status connected' : 'status disconnected';
+            statusEl.textContent = connected ? 'Connected' : 'Disconnected';
+        }
+
+        function enableButtons(enabled) {
+            document.getElementById('connectBtn').disabled = enabled;
+            document.getElementById('disconnectBtn').disabled = !enabled;
+            document.getElementById('subscribeBtn').disabled = !enabled;
+            document.getElementById('unsubscribeBtn').disabled = !enabled;
+            document.getElementById('pingBtn').disabled = !enabled;
+        }
+
+        // Auto-connect on load (optional)
+        // window.onload = connect;
+    </script>
+</body>
+</html>

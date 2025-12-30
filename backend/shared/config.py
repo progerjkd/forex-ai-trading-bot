@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../.env",  # .env is in project root
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -52,6 +52,21 @@ class Settings(BaseSettings):
     # Redis Configuration
     redis_url: str = Field(
         default="redis://localhost:6379/0", description="Redis connection URL"
+    )
+
+    # Streaming Configuration
+    streaming_enabled: bool = Field(default=True, description="Enable real-time streaming")
+    streaming_instruments: str = Field(
+        default="EUR/USD,GBP/USD,USD/JPY",
+        description="Instruments to stream (comma-separated)"
+    )
+    streaming_heartbeat_timeout: int = Field(
+        default=10, description="Heartbeat timeout in seconds"
+    )
+
+    # Aggregation Configuration
+    tick_aggregation_timeframes: str = Field(
+        default="M1,M5", description="Timeframes to aggregate ticks into (comma-separated)"
     )
 
     # AWS Configuration
