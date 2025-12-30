@@ -59,6 +59,99 @@ services:
     profiles:
       - tools  # Only start with: docker-compose --profile tools up
 
+  # OANDA streaming service - real-time price updates
+  forex-streaming:
+    build:
+      context: ../../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.streaming
+    container_name: forex-streaming
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../../.env
+    environment:
+      # Override URLs for Docker network
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://forex_user:forex_pass@postgres:5432/forex_trading
+    networks:
+      - forex-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis'); r.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Tick aggregator service - converts ticks to candles
+  forex-aggregator:
+    build:
+      context: ../../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.aggregator
+    container_name: forex-aggregator
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      forex-streaming:
+        condition: service_started
+    env_file:
+      - ../../.env
+    environment:
+      # Override URLs for Docker network
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://forex_user:forex_pass@postgres:5432/forex_trading
+    networks:
+      - forex-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # FastAPI WebSocket service - real-time dashboard API
+  forex-api:
+    build:
+      context: ../../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.api
+    container_name: forex-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../../.env
+    environment:
+      # Override URLs for Docker network
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://forex_user:forex_pass@postgres:5432/forex_trading
+    ports:
+      - "8000:8000"
+    networks:
+      - forex-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
     driver: local
